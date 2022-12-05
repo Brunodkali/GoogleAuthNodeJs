@@ -1,26 +1,16 @@
 const express = require('express');
 const app = express();
 const port = process.env.port || 3000;
-var cookies = require("cookie-parser");
-var CLIENT_ID = '';
-
-function getCookie(name, req) {
-    var cookie = {};
-    const cookieHeader = req.cookies;
-
-    cookieHeader.split(';').forEach(function(el) {
-      let [k,v] = el.split('=');
-      cookie[k.trim()] = v;
-    })
-    
-    return cookie[name];
-  }
+const cookies = require("cookie-parser");
+const bodyParser = require("body-parser");
 
 app.set('view engine', 'ejs');
 app.use(cookies());
+app.use(bodyParser.urlencoded({ extended: true }))
+app.use(bodyParser.json())
 
 app.get('/', (req, res) => {
-    res.render('index');
+    res.json({Mensagem: 'Caminho raiz, siga para /login'});
 });
 
 app.get('/login', (req, res) => {
@@ -28,27 +18,29 @@ app.get('/login', (req, res) => {
 });
 
 app.post('/login', function (req, res) {
-    const token = req.cookies['g_csrf_token'];
-    CLIENT_ID = req.cookies['connect.sid'];
-    console.log('Token:', token, 'Cliente ID:', CLIENT_ID);
+    const token = req.body.credential;
+    const audience = process.env.GOOGLE_CLIENT_ID || '245073186631-0aq6pl4ailrqeruehjuvhkk35iuem2e6.apps.googleusercontent.com';
+    const { OAuth2Client } = require('google-auth-library');
+    const client = new OAuth2Client(audience);
 
     if (!token) {
-        console.log('Nenhum token identificado');
+        return;
     }else {
-        console.log('Prossigamos guerreiros!');
+        token.split('.')
     }
-
-    const { OAuth2Client } = require('google-auth-library');
-    const client = new OAuth2Client(CLIENT_ID);
+    
     async function verify() {
         const ticket = await client.verifyIdToken({
-            idToken: token,
-            audience: CLIENT_ID,
+            idToken: token, 
+            audience: audience, 
         });
         const payload = ticket.getPayload();
-        const userid = payload['sub'];
+        const email = payload["email"];
+        console.log(email);
     }
-    verify().catch(console.error);
+    verify()
+    .then(res.json({Mensagem: 'Login bem sucedido!'}))
+    .catch(console.error);
 });
 
 app.listen(port, () => {

@@ -22,7 +22,7 @@ app.post('/login', (req, res) => {
     const client = new OAuth2Client(client_id);
 
     if (!token) {
-        return res.json({Error: 'Token não identificado!'});
+        return res.status(401).json({Error: 'Token não identificado!'});
     }
 
     (async () => {
@@ -34,7 +34,7 @@ app.post('/login', (req, res) => {
             const payload = ticket.getPayload();
             const nomeUser = payload["name"];
 
-            return res.json({Mensagem: ` Bem vindo, ${nomeUser}`});
+            return res.status(200).json({Mensagem: ` Bem vindo, ${nomeUser}`});
         }catch(err) {
             return err;
         }
